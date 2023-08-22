@@ -8,16 +8,18 @@
 #include <linux/wait.h>
 #include <linux/rcu_sync.h>
 #include <linux/lockdep.h>
+#include <linux/uek_kabi.h>
 
 struct percpu_rw_semaphore {
 	struct rcu_sync		rss;
 	unsigned int __percpu	*read_count;
-	struct rcuwait		writer;
-	wait_queue_head_t	waiters;
-	atomic_t		block;
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
-	struct lockdep_map	dep_map;
+	UEK_KABI_REPLACE(struct rw_semaphore rw_sem, wait_queue_head_t waiters; struct lockdep_map	dep_map)
+#else
+	UEK_KABI_REPLACE(struct rw_semaphore rw_sem, wait_queue_head_t waiters)
 #endif
+	struct rcuwait		writer;
+	UEK_KABI_REPLACE(int readers_block, atomic_t block)
 };
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
